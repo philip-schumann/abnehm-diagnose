@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Schumann Abnehm-Diagnose</title>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: eine schmale, linksbündige Spalte. Erst die Fragen einzeln, dann das Ergebnis mit einem klaren Hauptbefund, danach der Hinweis zum Chat. */
+:root {
+  --bg: #FFFFFF;
+  --surface: #EDF5EE;
+  --fg: #13241A;
+  --muted: #526457;
+  --line: #D3E0D6;
+  --accent: #2E8B3D;
+  --accent-ink: #1F6B2D;
+  --btn-bg: #267A34;
+  --btn-fg: #FFFFFF;
+  --warn-bg: #FFF3DC;
+  --warn-fg: #6B4A00;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1711;
+    --surface: #16231A;
+    --fg: #E8F1EA;
+    --muted: #9CB0A1;
+    --line: #29392D;
+    --accent: #4CC262;
+    --accent-ink: #78D98C;
+    --btn-bg: #4CC262;
+    --btn-fg: #0A170E;
+    --warn-bg: #2B2210;
+    --warn-fg: #F2D79A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1711;
+  --surface: #16231A;
+  --fg: #E8F1EA;
+  --muted: #9CB0A1;
+  --line: #29392D;
+  --accent: #4CC262;
+  --accent-ink: #78D98C;
+  --btn-bg: #4CC262;
+  --btn-fg: #0A170E;
+  --warn-bg: #2B2210;
+  --warn-fg: #F2D79A;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.55;
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 34rem; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+p { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+.brand { display: flex; align-items: center; gap: 10px; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); }
+.brand::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(2rem, 9vw, 2.75rem); line-height: 1.05; letter-spacing: -0.02em; margin: 14px 0 12px; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.375rem; line-height: 1.2; margin: 0 0 10px; text-wrap: balance; }
+h3 { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.lede { color: var(--muted); max-width: 32rem; }
+
+/* Fragen */
+.quiz { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.prog { display: flex; flex-direction: column; gap: 8px; }
+.prog-text { font-size: 0.875rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.track { height: 6px; background: var(--surface); border-radius: 3px; overflow: hidden; }
+.fill { height: 100%; background: var(--accent); border-radius: 3px; }
+.q { font-family: var(--font-display); font-weight: 600; font-size: 1.5rem; line-height: 1.2; margin: 0; text-wrap: balance; outline: none; }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.choice {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-height: 52px;
+  cursor: pointer;
+}
+.choice:hover { border-color: var(--accent); }
+.choice[aria-pressed="true"] { border-color: var(--accent); background: var(--surface); box-shadow: inset 0 0 0 1px var(--accent); }
+.choice:focus-visible, .linkbtn:focus-visible, button.main:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.linkbtn { align-self: flex-start; font: inherit; font-weight: 500; color: var(--accent-ink); background: none; border: 0; padding: 6px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Ergebnis */
+.result { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.hero { background: var(--surface); border-radius: 16px; padding: 22px 18px; display: flex; flex-direction: column; gap: 10px; }
+.hero h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.75rem, 8vw, 2.375rem); line-height: 1.05; letter-spacing: -0.02em; margin: 0; color: var(--accent-ink); }
+.say { font-style: normal; color: var(--muted); }
+.sect { display: flex; flex-direction: column; min-width: 0; }
+.steps { display: flex; flex-direction: column; gap: 12px; counter-reset: step; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 10px; align-items: start; }
+.steps li::before { content: counter(step); font-family: var(--font-display); font-weight: 800; font-size: 1.125rem; width: 2rem; height: 2rem; border-radius: 50%; background: var(--accent); color: #FFFFFF; display: grid; place-items: center; line-height: 1; }
+:root[data-theme="dark"] .steps li::before { color: #0A170E; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .steps li::before { color: #0A170E; } }
+
+.bars { display: flex; flex-direction: column; gap: 10px; }
+.bar { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 10px; align-items: center; font-size: 0.875rem; }
+.bar .track { height: 10px; border-radius: 5px; }
+.bar .fill { border-radius: 5px; }
+.bar.top .fill { background: var(--accent); }
+.bar:not(.top) .fill { background: var(--line); }
+.bar.top { font-weight: 600; }
+
+details.more { border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+details.more summary { cursor: pointer; font-weight: 600; color: var(--accent-ink); }
+.rw { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.field input, .field select {
+  width: 100%;
+  font: inherit;
+  font-size: 1.0625rem;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-variant-numeric: tabular-nums;
+}
+.field input:focus-visible, .field select:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.check { display: flex; gap: 12px; align-items: flex-start; font-size: 0.9375rem; cursor: pointer; }
+.check input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }
+.rw-out { background: var(--surface); border-radius: 12px; padding: 14px 16px; font-size: 0.9375rem; }
+.rw-out strong { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+.notice { background: var(--warn-bg); color: var(--warn-fg); border-radius: 10px; padding: 12px 14px; font-size: 0.9375rem; }
+
+.next { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.next p { max-width: 32rem; }
+button.main { align-self: flex-start; font: inherit; font-weight: 600; background: var(--btn-bg); color: var(--btn-fg); border: 0; border-radius: 10px; padding: 13px 22px; cursor: pointer; }
+.hint { font-size: 0.9375rem; color: var(--accent-ink); font-weight: 500; }
+textarea.fallback { width: 100%; font: inherit; font-size: 0.9375rem; color: var(--fg); background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; resize: none; }
+
+footer { border-top: 1px solid var(--line); padding-top: 16px; font-size: 0.8125rem; line-height: 1.5; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+footer strong { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+
+<main>
+  <header id="head">
+    <div class="brand">Schumann Coaching</div>
+    <h1>Deine Abnehm-Diagnose</h1>
+    <p class="lede">Sieben kurze Fragen, etwa eine Minute. Danach weißt du, was dich gerade am meisten ausbremst und was du diese Woche als Erstes änderst. Kostenlos, ohne Anmeldung, und es wird nichts gespeichert.</p>
+  </header>
+
+  <section class="quiz" id="quiz" aria-live="polite">
+    <div class="prog">
+      <p class="prog-text" id="progText">Frage 1 von 7</p>
+      <div class="track" aria-hidden="true"><div class="fill" id="progFill" style="width:14%"></div></div>
+    </div>
+    <h2 class="q" id="qText" tabindex="-1">Wie isst du unter der Woche meistens?</h2>
+    <ul class="options" id="options"></ul>
+    <button type="button" class="linkbtn" id="back" hidden>Zurück zur letzten Frage</button>
+  </section>
+
+  <section class="result" id="result" hidden>
+    <div class="hero">
+      <h3>Dein größter Bremsklotz</h3>
+      <h2 id="rName"></h2>
+      <p id="rWhat"></p>
+      <p class="say" id="rSay"></p>
+    </div>
+
+    <div class="sect">
+      <h3>Der häufigste Fehler dabei</h3>
+      <p id="rMistake"></p>
+    </div>
+
+    <div class="sect">
+      <h3>Dein Hebel für diese Woche</h3>
+      <ol class="steps" id="rSteps"></ol>
+    </div>
+
+    <div class="sect">
+      <h3>So verteilt sich dein Profil</h3>
+      <div class="bars" id="rBars"></div>
+      <p class="lede" id="rSecond" style="margin-top:12px"></p>
+    </div>
+
+    <details class="more">
+      <summary>Optional: Deine Richtwerte für Kalorien und Protein</summary>
+      <div class="rw">
+        <div class="grid2">
+          <div class="field"><label for="rw-sex">Ich bin</label><select id="rw-sex"><option value="f">Frau</option><option value="m">Mann</option></select></div>
+          <div class="field"><label for="rw-age">Alter in Jahren</label><input id="rw-age" type="number" inputmode="numeric" min="18" max="90"></div>
+          <div class="field"><label for="rw-height">Größe in cm</label><input id="rw-height" type="number" inputmode="numeric" min="130" max="220"></div>
+          <div class="field"><label for="rw-weight">Gewicht in kg</label><input id="rw-weight" type="number" inputmode="decimal" min="35" max="250" step="0.1"></div>
+          <div class="field"><label for="rw-goal">Wunschgewicht in kg</label><input id="rw-goal" type="number" inputmode="decimal" min="30" max="250" step="0.1"></div>
+          <div class="field"><label for="rw-act">Aktivität</label>
+            <select id="rw-act">
+              <option value="1.2">Wenig</option>
+              <option value="1.375" selected>Leicht</option>
+              <option value="1.55">Mittel</option>
+              <option value="1.725">Hoch</option>
+            </select>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="rw-nursing"><span>Ich stille gerade. Dann rechne ich vorsichtiger.</span></label>
+        <div class="rw-out" id="rwOut">Trag die Felder aus, dann erscheinen deine Richtwerte.</div>
+      </div>
+    </details>
+
+    <div class="next">
+      <h2>Wie geht es jetzt weiter?</h2>
+      <p>Der Hebel oben ist ein guter Anfang. Wenn du magst, schaue ich mir dein Ergebnis persönlich mit dir an und sage dir ehrlich, was in deinem Alltag am besten funktioniert. Schick mir dazu einfach dein Ergebnis in unserem Chat.</p>
+      <button type="button" class="main" id="copy">Ergebnis kopieren</button>
+      <p class="hint" id="copied" hidden>Kopiert. Füge es jetzt in unserem Chat ein.</p>
+      <textarea class="fallback" id="fallback" rows="3" readonly hidden aria-label="Dein Ergebnis zum Kopieren"></textarea>
+      <button type="button" class="linkbtn" id="again">Diagnose noch einmal machen</button>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>Philip Schumann, Online-Fitnesscoach</strong></p>
+    <p>Die Auswertung beruht auf Mustern, die ich in der Arbeit mit meinen Klienten immer wieder sehe. Sie ist ein Hinweis und keine medizinische Beratung. Bei Schwangerschaft, Vorerkrankungen oder einer Essstörung sprich bitte vorher mit deiner Ärztin oder deinem Arzt.</p>
+  </footer>
+</main>
+
+<script>
+var TYPE_ORDER = ['H', 'S', 'A', 'P', 'K', 'R'];
+
+var TYPES = {
+  H: {
+    name: 'Der Heißhunger-Kreislauf',
+    short: 'Heißhunger',
+    what: 'Du isst tagsüber zu wenig oder zu unregelmäßig. Abends holt sich dein Körper dann zurück, was ihm fehlt, und es fühlt sich an wie fehlende Disziplin. Es ist aber ein Muster.',
+    say: 'So klingt das oft: „Tagsüber esse ich kaum etwas, und abends ist nichts mehr sicher.“',
+    mistake: 'Noch strenger werden. Je weniger du tagsüber isst, desto stärker wird der Druck am Abend. Wer mit Low Carb oder Kalorienzählen so weit runtergeht, dass er nur noch durchhält, landet oft auf der Stelle und irgendwann beim Heißhunger.',
+    steps: [
+      'Iss drei feste Mahlzeiten pro Tag, jeden Tag zu ähnlichen Zeiten. Auch wenn du morgens noch keinen großen Hunger hast.',
+      'Starte den Tag mit Protein, zum Beispiel Skyr, Eier oder ein Protein-Smoothie. Etwa 25 bis 30 g reichen für den Anfang.',
+      'Plane abends etwas ein, das du wirklich gerne isst. Was geplant ist, ist kein Ausrutscher und lässt den Abend ruhiger werden.'
+    ]
+  },
+  S: {
+    name: 'Erschöpfung und Stress',
+    short: 'Schlaf & Stress',
+    what: 'Dein Körper läuft auf Reserve. Wer wenig oder unterbrochen schläft und viel um die Ohren hat, bekommt mehr Appetit auf Süßes, hat weniger Energie und hält Pläne schlechter durch.',
+    say: 'So klingt das oft: „Abends bin ich so platt, dass für Essen planen und Training nichts mehr übrig ist.“',
+    mistake: 'Noch mehr Training und noch mehr Verzicht oben drauf packen. Das erhöht den Druck, und dein Körper bekommt keine Erholung.',
+    steps: [
+      'Mach Schlaf zur Nummer eins: eine feste Aufstehzeit und eine halbe bis ganze Stunde vor dem Schlafen kein Bildschirm.',
+      'Ersetze zusätzliches Training erst mal durch Gehen. Ein Ziel von 8.000 bis 10.000 Schritten am Tag ist ein guter Rahmen.',
+      'Vereinfache dein Essen: drei Frühstücke und drei Abendessen im Wechsel. Weniger Entscheidungen bedeuten weniger Stress.'
+    ]
+  },
+  A: {
+    name: 'Alles oder nichts',
+    short: 'Alles oder nichts',
+    what: 'Du startest mit Vollgas. Sobald ein Tag nicht perfekt läuft, rutscht die ganze Woche hinterher, bis zum nächsten Neustart. Das Problem ist nicht dein Wille, sondern dass es keine Version für schlechte Tage gibt.',
+    say: 'So klingt das oft: „Wenn ein Tag nicht klappt, ist für mich die ganze Woche gelaufen.“',
+    mistake: 'Auf den perfekten Tag zu zielen. Nicht der einzelne Tag entscheidet, sondern die Woche. Ein Tag mit 70 % schlägt einen Tag mit 0 %.',
+    steps: [
+      'Lege eine Mindestversion für schlechte Tage fest, zum Beispiel Protein zu jeder Mahlzeit und 20 Minuten Gehen. Mehr muss an solchen Tagen nicht sein.',
+      'Gib dem Wochenende einen Anker: ein festes Frühstück und ein Spaziergang, damit es kein freier Fall wird.',
+      'Lebe nach 80, 10, 10: 80 % zielgerichtet, 10 % Genuss, 10 % Luft für Urlaub und Ausnahmen. Dann ist ein Ausrutscher Teil des Plans.'
+    ]
+  },
+  P: {
+    name: 'Plan-Chaos',
+    short: 'Plan-Chaos',
+    what: 'Du hast schon viel probiert und folgst vielen Tipps. Jeder Ansatz fühlt sich etwas anders an, deshalb bleibt keiner lange genug, um zu wirken. Dein Fleiß ist da, es fehlt ein Plan, der bleibt.',
+    say: 'So klingt das oft: „Ich habe schon so viel ausprobiert, aber nie lange genug, um zu sehen, ob es funktioniert.“',
+    mistake: 'Nach ein bis zwei Wochen ohne sichtbares Ergebnis zum nächsten Ansatz zu wechseln. Eine Körperveränderung zeigt sich meist erst nach mehreren Wochen, und mit jedem Wechsel fängst du bei null an.',
+    steps: [
+      'Such dir einen einzigen Ansatz für die nächsten vier Wochen aus und schreib ihn auf eine Seite: Essen, Training, Schritte.',
+      'Miss etwas Verlässlicheres als die tägliche Waage: den Wochendurchschnitt deines Gewichts, deinen Taillenumfang und alle zwei Wochen ein Foto.',
+      'Lass für diese vier Wochen alle anderen Tipps links liegen. Das ist kein Verzicht, sondern der Test, ob dein Plan wirkt.'
+    ]
+  },
+  K: {
+    name: 'Alltag frisst den Plan',
+    short: 'Alltag & Küche',
+    what: 'Dein Alltag lässt wenig Raum zum Planen. Du entscheidest spät, was es gibt, und isst dann, was schnell geht oder was übrig ist. Du weißt meist schon, was gesund wäre. Dir fehlt die Zeit, es jeden Tag neu zu überlegen.',
+    say: 'So klingt das oft: „Ich weiß, was gesund wäre. Mir fehlt die Zeit, jeden Tag zu überlegen, was ich koche.“',
+    mistake: 'Für dich und die Familie getrennt zu kochen. Das kostet doppelt Zeit, und niemand hält es lange durch.',
+    steps: [
+      'Wähle drei einfache Gerichte, die alle bei dir zu Hause essen, und wiederhole sie diese Woche.',
+      'Nimm dir am Sonntag 20 Minuten: Einkaufsliste schreiben und ein bis zwei Dinge vorkochen. Das ist die halbe Miete für die ganze Woche.',
+      'Baue jede Mahlzeit nach derselben Formel: eine Proteinquelle, viel Gemüse und eine sättigende Beilage. Dann musst du nicht jedes Mal neu denken.'
+    ]
+  },
+  R: {
+    name: 'Der fehlende Muskelreiz',
+    short: 'Muskelreiz',
+    what: 'Du bewegst dich, aber dein Körper bekommt keinen Reiz, Muskeln zu behalten. Beim Abnehmen geht dann auch Muskelmasse verloren, und du siehst trotz Aufwand nicht straffer aus.',
+    say: 'So klingt das oft: „Ich bewege mich viel, aber mein Körper sieht nicht anders aus.“',
+    mistake: 'Nur Cardio oder Eigengewicht und dazu wenig essen. Das spart Kalorien, formt deinen Körper aber kaum. Ab einem gewissen Punkt reicht das Eigengewicht als Reiz nicht mehr aus.',
+    steps: [
+      'Trainiere zwei- bis dreimal pro Woche mit Gewichten, Ganzkörper, jeweils 30 bis 45 Minuten. Ein Fitnessstudio, eine Freundin mit Hanteln oder Kurzhanteln zu Hause reichen.',
+      'Steigere dich Woche für Woche ein kleines Stück: eine Wiederholung mehr oder etwas mehr Gewicht. Das ist der Reiz, auf den dein Körper reagiert.',
+      'Iss pro Tag etwa 1,6 bis 2 g Protein pro Kilogramm Körpergewicht. Bei höherem Gewicht orientierst du dich eher an deinem Wunschgewicht.'
+    ]
+  }
+};
+
+var QUESTIONS = [
+  { q: 'Wie isst du unter der Woche meistens?', a: [
+    { t: 'Unregelmäßig, oft nur ein oder zwei Mahlzeiten', s: { H: 3 } },
+    { t: 'Regelmäßig, aber ohne Plan, was auf den Tisch kommt', s: { K: 2, P: 1 } },
+    { t: 'Ich esse bewusst wenig, und abends kommt der Hunger', s: { H: 3, A: 1 } },
+    { t: 'Ziemlich gut, aber die Waage bewegt sich kaum', s: { R: 1, S: 1 } }
+  ] },
+  { q: 'Was passiert bei dir am Abend oder am Wochenende?', a: [
+    { t: 'Heißhunger auf Süßes oder Snacks', s: { H: 3 } },
+    { t: 'Unter der Woche klappt es, am Wochenende falle ich raus', s: { A: 3 } },
+    { t: 'Ich esse, was gerade da ist oder was die Familie übrig lässt', s: { K: 3 } },
+    { t: 'Nichts Besonderes, es läuft eigentlich ruhig', s: {} }
+  ] },
+  { q: 'Wie bist du bisher ans Abnehmen herangegangen?', a: [
+    { t: 'Ich habe vieles ausprobiert und oft den Ansatz gewechselt', s: { P: 3 } },
+    { t: 'Ich starte voll motiviert und höre nach ein paar Wochen wieder auf', s: { A: 3 } },
+    { t: 'Ich habe Kalorien gezählt oder Low Carb gemacht, bis nichts mehr ging', s: { H: 2, P: 1 } },
+    { t: 'Ich fange gerade erst an', s: { P: 1 } }
+  ] },
+  { q: 'Wie schläfst du?', a: [
+    { t: 'Weniger als 6 Stunden, oder mein Schlaf wird oft unterbrochen', s: { S: 3 } },
+    { t: 'Etwa 6 bis 7 Stunden, es geht so', s: { S: 1 } },
+    { t: 'Ich schlafe meistens gut', s: {} }
+  ] },
+  { q: 'Wie sieht dein Training aus?', a: [
+    { t: 'Kaum bis gar nicht', s: { R: 1, P: 1 } },
+    { t: 'Viel Gehen, Cardio oder Übungen mit Eigengewicht, aber keine Gewichte', s: { R: 3 } },
+    { t: 'Mit Gewichten, aber ohne festen Plan', s: { P: 2 } },
+    { t: 'Regelmäßig nach einem festen Plan', s: {} }
+  ] },
+  { q: 'Wie viel Zeit bleibt dir an einem normalen Tag nur für dich?', a: [
+    { t: 'Weniger als 20 Minuten', s: { K: 2, S: 1 } },
+    { t: '20 bis 45 Minuten', s: { K: 1 } },
+    { t: 'Mehr als eine Stunde', s: {} }
+  ] },
+  { q: 'Was fehlt dir gerade am meisten?', a: [
+    { t: 'Ein klarer Plan, der zu meinem Alltag passt', s: { P: 2, K: 1 } },
+    { t: 'Einfache Rezepte, die auch meine Familie isst', s: { K: 3 } },
+    { t: 'Durchhaltevermögen', s: { A: 3 } },
+    { t: 'Energie und Ruhe', s: { S: 3 } },
+    { t: 'Sichtbare Veränderung trotz Aufwand', s: { R: 2, H: 1 } }
+  ] }
+];
+
+function scoreQuiz(picks) {
+  var scores = {};
+  TYPE_ORDER.forEach(function (k) { scores[k] = 0; });
+  picks.forEach(function (idx, qi) {
+    var opt = QUESTIONS[qi] && QUESTIONS[qi].a[idx];
+    if (!opt) return;
+    Object.keys(opt.s).forEach(function (k) { scores[k] += opt.s[k]; });
+  });
+  var order = TYPE_ORDER.slice().sort(function (a, b) {
+    if (scores[b] !== scores[a]) return scores[b] - scores[a];
+    return TYPE_ORDER.indexOf(a) - TYPE_ORDER.indexOf(b);
+  });
+  return { scores: scores, order: order };
+}
+
+function calcCheck(i) {
+  var h = i.height / 100;
+  if (i.age < 18) return { error: 'Die Richtwerte sind für Erwachsene ab 18 gemacht.' };
+  if (i.age > 90 || i.height < 130 || i.height > 220 || i.weight < 35 || i.weight > 250 || i.goal < 30 || i.goal > 250) {
+    return { error: 'Bitte prüfe deine Eingaben. Größe in cm, Gewicht in kg.' };
+  }
+  var bmiNow = i.weight / (h * h);
+  var bmiGoal = i.goal / (h * h);
+  if (bmiNow < 18.5) return { error: 'Bei deinem aktuellen Gewicht rechne ich dir kein Defizit aus. Sprich dazu bitte mit deiner Ärztin oder deinem Arzt.' };
+  if (i.goal >= i.weight) return { error: 'Dein Wunschgewicht liegt nicht unter deinem aktuellen Gewicht. Die Richtwerte sind fürs Abnehmen gebaut.' };
+  if (bmiGoal < 18.5) return { error: 'Dein Wunschgewicht läge im Untergewicht (BMI unter 18,5). Wähle bitte ein etwas höheres Ziel.' };
+
+  var bmr = 10 * i.weight + 6.25 * i.height - 5 * i.age + (i.sex === 'm' ? 5 : -161);
+  var tdee = bmr * i.act + (i.nursing ? 350 : 0);
+  var maxDeficit = i.nursing ? 0.10 : 0.20;
+  var floor = Math.max(bmr, i.sex === 'm' ? 1500 : 1200);
+  var kcal = Math.max(tdee * (1 - maxDeficit), floor);
+  kcal = Math.min(kcal, tdee * 0.95);
+  kcal = Math.round(kcal / 10) * 10;
+  var refW = i.goal + (i.weight - i.goal) / 2;
+  var protein = Math.round(1.8 * refW / 5) * 5;
+  return { kcal: kcal, protein: protein, nursing: !!i.nursing };
+}
+</script>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var nf = new Intl.NumberFormat('de-DE');
+  var step = 0;
+  var picks = [];
+  var copyText = '';
+
+  function renderQ(focus) {
+    var q = QUESTIONS[step];
+    $('progText').textContent = 'Frage ' + (step + 1) + ' von ' + QUESTIONS.length;
+    $('progFill').style.width = Math.round((step + 1) / QUESTIONS.length * 100) + '%';
+    $('qText').textContent = q.q;
+    var list = $('options');
+    list.textContent = '';
+    q.a.forEach(function (o, i) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'choice';
+      b.textContent = o.t;
+      if (picks[step] === i) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', function () { pick(i); });
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+    $('back').hidden = step === 0;
+    if (focus) { try { $('qText').focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  function pick(i) {
+    picks[step] = i;
+    if (step < QUESTIONS.length - 1) {
+      step++;
+      renderQ(true);
+    } else {
+      showResult();
+    }
+  }
+
+  function showResult() {
+    var res = scoreQuiz(picks);
+    var top = TYPES[res.order[0]];
+    var second = res.scores[res.order[1]] > 0 ? TYPES[res.order[1]] : null;
+    var max = Math.max(res.scores[res.order[0]], 1);
+
+    $('rName').textContent = top.name;
+    $('rWhat').textContent = top.what;
+    $('rSay').textContent = top.say;
+    $('rMistake').textContent = top.mistake;
+
+    var steps = $('rSteps');
+    steps.textContent = '';
+    top.steps.forEach(function (t) {
+      var li = document.createElement('li');
+      var p = document.createElement('p');
+      p.textContent = t;
+      li.appendChild(p);
+      steps.appendChild(li);
+    });
+
+    var bars = $('rBars');
+    bars.textContent = '';
+    res.order.forEach(function (k, idx) {
+      var row = document.createElement('div');
+      row.className = 'bar' + (idx === 0 ? ' top' : '');
+      var label = document.createElement('span');
+      label.textContent = TYPES[k].short;
+      var track = document.createElement('div');
+      track.className = 'track';
+      var fill = document.createElement('div');
+      fill.className = 'fill';
+      fill.style.width = Math.max(4, Math.round(res.scores[k] / max * 100)) + '%';
+      track.appendChild(fill);
+      row.appendChild(label);
+      row.appendChild(track);
+      bars.appendChild(row);
+    });
+
+    $('rSecond').textContent = second
+      ? 'Dein zweiter Bremsklotz ist „' + second.name + '“. Kümmere dich zuerst um den ersten, der zweite wird dadurch oft schon leichter.'
+      : '';
+
+    copyText = 'Meine Abnehm-Diagnose: ' + top.name + (second ? '. Zweiter Bremsklotz: ' + second.name + '.' : '.');
+
+    $('quiz').hidden = true;
+    $('head').hidden = true;
+    $('result').hidden = false;
+    $('copied').hidden = true;
+    $('fallback').hidden = true;
+    try { window.scrollTo(0, 0); } catch (e) {}
+  }
+
+  function restart() {
+    step = 0;
+    picks = [];
+    $('result').hidden = true;
+    $('head').hidden = false;
+    $('quiz').hidden = false;
+    renderQ(false);
+    try { window.scrollTo(0, 0); } catch (e) {}
+  }
+
+  $('back').addEventListener('click', function () {
+    if (step > 0) { step--; renderQ(true); }
+  });
+  $('again').addEventListener('click', restart);
+
+  $('copy').addEventListener('click', function () {
+    if (!copyText) return;
+    var done = function () { $('copied').hidden = false; $('fallback').hidden = true; };
+    var fallback = function () {
+      var f = $('fallback');
+      f.value = copyText;
+      f.hidden = false;
+      f.focus();
+      f.select();
+    };
+    try {
+      navigator.clipboard.writeText(copyText).then(done, fallback);
+    } catch (e) {
+      fallback();
+    }
+  });
+
+  function val(id) {
+    var v = parseFloat(String($(id).value).replace(',', '.'));
+    return isFinite(v) ? v : NaN;
+  }
+  function renderRw() {
+    var input = {
+      sex: $('rw-sex').value,
+      age: val('rw-age'),
+      height: val('rw-height'),
+      weight: val('rw-weight'),
+      goal: val('rw-goal'),
+      act: parseFloat($('rw-act').value),
+      nursing: $('rw-nursing').checked
+    };
+    var out = $('rwOut');
+    out.className = 'rw-out';
+    if ([input.age, input.height, input.weight, input.goal, input.act].some(function (n) { return !isFinite(n); })) {
+      out.textContent = 'Trag die Felder aus, dann erscheinen deine Richtwerte.';
+      return;
+    }
+    var r = calcCheck(input);
+    if (r.error) {
+      out.className = 'notice';
+      out.textContent = r.error;
+      return;
+    }
+    out.textContent = '';
+    var l1 = document.createElement('p');
+    l1.appendChild(document.createTextNode('Zum Abnehmen: etwa '));
+    var s1 = document.createElement('strong');
+    s1.textContent = nf.format(r.kcal) + ' kcal';
+    l1.appendChild(s1);
+    l1.appendChild(document.createTextNode(' und '));
+    var s2 = document.createElement('strong');
+    s2.textContent = nf.format(r.protein) + ' g Protein';
+    l1.appendChild(s2);
+    l1.appendChild(document.createTextNode(' pro Tag.'));
+    out.appendChild(l1);
+    if (r.nursing) {
+      var l2 = document.createElement('p');
+      l2.style.marginTop = '6px';
+      l2.textContent = 'Weil du stillst, ist das Defizit klein gehalten. Besprich die Zahlen bitte mit deiner Hebamme oder Ärztin.';
+      out.appendChild(l2);
+    }
+  }
+  ['rw-sex', 'rw-age', 'rw-height', 'rw-weight', 'rw-goal', 'rw-act', 'rw-nursing'].forEach(function (id) {
+    $(id).addEventListener('input', renderRw);
+    $(id).addEventListener('change', renderRw);
+  });
+
+  renderQ(false);
+})();
+</script>
+
+</body>
+</html>
