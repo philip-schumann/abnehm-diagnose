@@ -157,6 +157,13 @@ button.main { align-self: flex-start; font: inherit; font-weight: 600; backgroun
 .hint { font-size: 0.9375rem; color: var(--accent-ink); font-weight: 500; }
 textarea.fallback { width: 100%; font: inherit; font-size: 0.9375rem; color: var(--fg); background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; resize: none; }
 
+.send { display: flex; flex-direction: column; gap: 12px; min-width: 0; max-width: 32rem; }
+.send .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.send .small { font-size: 0.8125rem; color: var(--muted); }
+.send .small a { color: var(--accent-ink); }
+.err { background: var(--warn-bg); color: var(--warn-fg); border-radius: 10px; padding: 12px 14px; font-size: 0.9375rem; }
+button.main[disabled] { opacity: 0.6; cursor: default; }
+
 footer { border-top: 1px solid var(--line); padding-top: 16px; font-size: 0.8125rem; line-height: 1.5; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
 footer strong { color: var(--fg); font-weight: 600; }
 </style>
@@ -231,7 +238,18 @@ footer strong { color: var(--fg); font-weight: 600; }
     <div class="next">
       <h2>Wie geht es jetzt weiter?</h2>
       <p>Der Hebel oben ist ein guter Anfang. Wenn du magst, schaue ich mir dein Ergebnis persönlich mit dir an und sage dir ehrlich, was in deinem Alltag am besten funktioniert. Schick mir dazu einfach dein Ergebnis in unserem Chat.</p>
-      <button type="button" class="main" id="copy">Ergebnis kopieren</button>
+      <div class="send" id="sendBox" hidden>
+        <div class="field">
+          <label for="ig">Dein Instagram-Name</label>
+          <input id="ig" type="text" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="@deinname" maxlength="60">
+        </div>
+        <div class="hp" aria-hidden="true"><label>Website<input id="website" type="text" tabindex="-1" autocomplete="off"></label></div>
+        <button type="button" class="main" id="send">Ergebnis an Philip schicken</button>
+        <p class="small">Deine Daten werden erst gesendet, wenn du auf den Button klickst. Ich nutze sie nur, um dir auf Instagram zu antworten. <a id="privacyLink" href="#" target="_blank" rel="noopener" hidden>Datenschutz</a></p>
+        <p class="err" id="sendErr" role="alert" hidden></p>
+        <p class="hint" id="sent" role="status" hidden>Angekommen. Ich schaue es mir an und schreibe dir auf Instagram.</p>
+      </div>
+      <button type="button" class="linkbtn" id="copy">Oder Ergebnis kopieren und im Chat einfügen</button>
       <p class="hint" id="copied" hidden>Kopiert. Füge es jetzt in unserem Chat ein.</p>
       <textarea class="fallback" id="fallback" rows="3" readonly hidden aria-label="Dein Ergebnis zum Kopieren"></textarea>
       <button type="button" class="linkbtn" id="again">Diagnose noch einmal machen</button>
@@ -413,6 +431,14 @@ function calcCheck(i) {
   var step = 0;
   var picks = [];
   var copyText = '';
+  // Web-App-URL aus Google Apps Script hier eintragen. Leer = nur Kopieren-Button.
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxFkxWb20tCKlP_Qg3LvL4uMuGQnmtO94DTUhOFhVSlGaGmqWAuPo7OYxOzIRCNoqjR/exec';
+  // Optional: Link zur Datenschutzerklärung.
+  var PRIVACY_URL = '';
+  var sending = false;
+  var sentOnce = false;
+  var lastTop = '';
+  var lastSecond = '';
 
   function renderQ(focus) {
     var q = QUESTIONS[step];
@@ -496,6 +522,12 @@ function calcCheck(i) {
     $('result').hidden = false;
     $('copied').hidden = true;
     $('fallback').hidden = true;
+    lastTop = top.name;
+    lastSecond = second ? second.name : '';
+    $('sendBox').hidden = !ENDPOINT;
+    $('sendErr').hidden = true;
+    $('sent').hidden = !sentOnce;
+    if (PRIVACY_URL) { $('privacyLink').href = PRIVACY_URL; $('privacyLink').hidden = false; }
     try { window.scrollTo(0, 0); } catch (e) {}
   }
 
@@ -529,6 +561,43 @@ function calcCheck(i) {
     } catch (e) {
       fallback();
     }
+  });
+
+  $('send').addEventListener('click', function () {
+    if (sending || !ENDPOINT) return;
+    var err = $('sendErr');
+    var raw = String($('ig').value || '').trim();
+    var m = raw.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+    var name = (m ? m[1] : raw).replace(/^@+/, '');
+    if (!/^[A-Za-z0-9._]{1,30}$/.test(name)) {
+      err.textContent = 'Bitte gib deinen Instagram-Namen ein, genau wie er bei Instagram steht (nur Buchstaben, Zahlen, Punkt, Unterstrich).';
+      err.hidden = false;
+      $('ig').focus();
+      return;
+    }
+    err.hidden = true;
+    var answers = QUESTIONS.map(function (q, i) {
+      return q.a[picks[i]] ? q.a[picks[i]].t : '';
+    });
+    var payload = { instagram: name, top: lastTop, second: lastSecond, answers: answers, website: $('website').value };
+    sending = true;
+    $('send').disabled = true;
+    $('send').textContent = 'Wird gesendet...';
+    fetch(ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).then(function () {
+      sentOnce = true;
+      $('sent').hidden = false;
+      $('send').textContent = 'Gesendet';
+    }, function () {
+      err.textContent = 'Das hat leider nicht geklappt. Bitte versuche es gleich noch einmal oder kopiere dein Ergebnis und schick es mir im Chat.';
+      err.hidden = false;
+      $('send').disabled = false;
+      $('send').textContent = 'Ergebnis an Philip schicken';
+    }).then(function () { sending = false; });
   });
 
   function val(id) {
